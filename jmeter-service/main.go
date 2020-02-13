@@ -141,6 +141,9 @@ func getTestInfo(data keptnevents.DeploymentFinishedEventData) *TestInfo {
 }
 
 func getServiceURL(data keptnevents.DeploymentFinishedEventData) string {
+	if data.TestURL != "" {
+		return data.TestURL
+	}
 	serviceURL := data.Service + "." + data.Project + "-" + data.Stage
 	if data.DeploymentStrategy == "blue_green_service" {
 		serviceURL = data.Service + "-canary" + "." + data.Project + "-" + data.Stage
