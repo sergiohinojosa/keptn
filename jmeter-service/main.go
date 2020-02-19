@@ -52,6 +52,10 @@ func gotEvent(ctx context.Context, event cloudevents.Event) error {
 		return err
 	}
 
+	fmt.Println("Sleep until rollout completed wait for suspend")
+	time.Sleep(60 * time.Second)
+	fmt.Println("Sleep finished")
+
 	if event.Type() != keptnevents.DeploymentFinishedEventType {
 		const errorMsg = "Received unexpected keptn event"
 		logger.Error(errorMsg)
