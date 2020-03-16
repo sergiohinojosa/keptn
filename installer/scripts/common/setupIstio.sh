@@ -37,6 +37,13 @@ fi
 
 # Domain used for routing to keptn services
 if [[ "$GATEWAY_TYPE" == "LoadBalancer" ]]; then
+  printf "About to configure Keptn for Microk8s"
+  export PUBLIC_IP=$(curl -s ifconfig.me) 
+  PUBLIC_IP_AS_DOM=$(echo $PUBLIC_IP | sed 's~\.~-~g')
+  export DOMAIN="${PUBLIC_IP_AS_DOM}.nip.io"
+  export INGRESS_HOST=$DOMAIN
+
+elif [[ "$GATEWAY_TYPE" == "LoadBalancerAlt" ]]; then
   wait_for_istio_ingressgateway "hostname"
   export DOMAIN=$(kubectl get svc istio-ingressgateway -o json -n istio-system | jq -r .status.loadBalancer.ingress[0].hostname)
   if [[ $? != 0 ]]; then
@@ -54,14 +61,15 @@ if [[ "$GATEWAY_TYPE" == "LoadBalancer" ]]; then
           print_error "IP of Istio ingress gateway could not be derived."
           exit 1
       fi
-      export DOMAIN="$DOMAIN.xip.io"
+      export DOMAIN="$DOMAIN.nip.io"
       export INGRESS_HOST=$DOMAIN
   fi
 elif [[ "$GATEWAY_TYPE" == "NodePort" ]]; then
+
     NODE_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}')
-    NODE_IP=$(kubectl get nodes -l node-role.kubernetes.io/worker=true -o jsonpath='{ $.items[0].status.addresses[?(@.type=="InternalIP")].address }')
-    export DOMAIN="$NODE_IP.xip.io:$NODE_PORT"
-    export INGRESS_HOST="$NODE_IP.xip.io"
+    NODE_IP=$(curl ifconfig.me)
+    export DOMAIN="$NODE_IP.nip.io:$NODE_PORT"
+    export INGRESS_HOST="$NODE_IP.nip.io" 
 fi
 
 echo $DOMAIN
